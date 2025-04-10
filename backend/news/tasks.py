@@ -17,9 +17,12 @@ def parse_rss_feeds():
         for entry in parsed_feed.entries:
             # print(f"Processing {entry.title}...")
             # print(f"attrs: {entry.keys()}")
-
-            category_name = entry.get('category',
-                                      entry.get('tags', ['Uncategorized'])[0])  # Якщо немає категорії – "Uncategorized"
+            tags = entry.get('tags', [])
+            tag_name = 'Uncategorized'
+            if len(tags) > 0:
+                # Якщо є теги, беремо перший з них
+                tag_name = tags[0]
+            category_name = entry.get('category', tag_name)  # Якщо немає категорії – "Uncategorized"
 
             # Знаходимо або створюємо категорію
             category, _ = Category.objects.get_or_create(name=category_name)

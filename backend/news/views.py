@@ -1,7 +1,8 @@
+from django.db.models import Count
 from rest_framework import generics
 
-from .models import NewsArticle
-from .serializers import NewsArticleSerializer
+from .models import NewsArticle, Category
+from .serializers import NewsArticleSerializer, CategorySerializer
 
 
 class NewsArticleListView(generics.ListAPIView):
@@ -20,3 +21,14 @@ class NewsArticleByCategoryListView(generics.ListAPIView):
     def get_queryset(self):
         category = self.kwargs['pk']
         return NewsArticle.objects.filter(category__pk=category).order_by('-published_at')
+
+
+class CategoryListView(generics.ListAPIView):
+    queryset = Category.objects.all().order_by('name')
+    serializer_class = CategorySerializer
+    pagination_class = None
+
+    def get_queryset(self):
+        return Category.objects.annotate(news_count=Count('newsarticle')) \
+            .filter(news_count__gt=0) \
+            .order_by('name')

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import NewsArticle
+from .models import NewsArticle, Category
 
 
 class NewsArticleSerializer(serializers.ModelSerializer):
@@ -9,3 +9,10 @@ class NewsArticleSerializer(serializers.ModelSerializer):
     class Meta:
         model = NewsArticle
         fields = '__all__'
+
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'name']
