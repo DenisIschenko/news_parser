@@ -92,7 +92,10 @@ function FeedList() {
             />
 
             {loading ? (
-                <CircularProgress/>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <br />
+                    <CircularProgress/>
+                </Box>
             ) : (
                 <>
                     {feeds.map((feed) => (
@@ -100,6 +103,7 @@ function FeedList() {
                             key={feed.id}
                             title={feed.title}
                             published_at={feed.published_at}
+                            created_at={feed.created_at}
                             onClick={() => handleOpenModal(feed)} // додаємо onClick для відкриття
                         />
                     ))}

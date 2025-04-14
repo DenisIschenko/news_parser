@@ -154,4 +154,15 @@ CELERY_TASK_SERIALIZER = 'json'
 
 CORS_ORIGIN_WHITELIST = [
     'http://localhost:5173',
+    'http://localhost:4173',
 ]
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://localhost:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}

@@ -3,20 +3,19 @@ from email.utils import parsedate_to_datetime
 import feedparser
 from celery import shared_task
 from dateutil import parser
+from django.core.cache import cache
 
 from .models import RSSFeed, NewsArticle, Category
 
 
 @shared_task
 def parse_rss_feeds():
-    feeds_counter = 0
+    cache_keys = {'news_list', 'category_list'}
     feeds = RSSFeed.objects.all()
     for feed in feeds:
         print(f"Parsing {feed.url}...")
         parsed_feed = feedparser.parse(feed.url)
         for entry in parsed_feed.entries:
-            # print(f"Processing {entry.title}...")
-            # print(f"attrs: {entry.keys()}")
             tags = entry.get('tags', [])
             tag_name = 'Uncategorized'
             if len(tags) > 0:
@@ -49,7 +48,10 @@ def parse_rss_feeds():
                     'category': category
                 }
             )
+            cache_keys.add('news_list' + str(category.pk))
         print(f"Parsed {len(parsed_feed.entries)} Articles.")
+    # Очищаємо кеш для списків новин і категорій
+    cache.delete_many(cache_keys)
     return f"Parsed {feeds.count()} RSS feeds."
 
 
