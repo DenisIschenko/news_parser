@@ -1,5 +1,7 @@
+from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 from django.core.cache import cache
 from django.db.models import Count
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import generics
 from rest_framework.response import Response
 
@@ -52,7 +54,7 @@ class CategoryListView(generics.ListAPIView):
 
     def get_queryset(self):
         return Category.objects.annotate(news_count=Count('newsarticle')) \
-            .filter(news_count__gt=1) \
+            .filter(news_count__gt=0) \
             .order_by('name')
 
     def list(self, request, *args, **kwargs):
@@ -63,3 +65,30 @@ class CategoryListView(generics.ListAPIView):
             data = serializer.data
             cache.set('category_list', data, timeout=60 * 60)  # 1 година
         return Response(data)
+
+
+@extend_schema(
+    parameters=[
+        OpenApiParameter(
+            name='q',
+            description='Пошуковий запит (повнотекстовий)',
+            required=False,
+            type=str,
+        ),
+    ]
+)
+class NewsSearchView(generics.ListAPIView):
+    serializer_class = NewsArticleSerializer
+
+    def get_queryset(self):
+        query = self.request.query_params.get('q')
+        queryset = NewsArticle.objects.all()
+
+        if query:
+            vector = SearchVector('title', weight='A') + SearchVector('content', weight='B')
+            search_query = SearchQuery(query)
+            queryset = queryset.annotate(
+                rank=SearchRank(vector, search_query)
+            ).filter(rank__gte=0.1).order_by('-rank')
+
+        return queryset

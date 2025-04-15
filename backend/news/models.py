@@ -1,4 +1,6 @@
 from django.db import models
+from django.contrib.postgres.indexes import GinIndex
+from django.contrib.postgres.search import SearchVector
 
 
 class Category(models.Model):
@@ -29,6 +31,11 @@ class NewsArticle(models.Model):
             # Оптимізує запити, де ми шукаємо новини з певного джерела за датою:
             # cnn_news = NewsArticle.objects.filter(source="CNN").order_by('-published_at')
             models.Index(fields=['source', 'published_at']), # Комбінований індекс (швидкий пошук новин за джерелом і датою)
+            # GinIndex(
+            #     SearchVector('title', weight='A') + SearchVector('content', weight='B'),
+            #     name='news_search_gin',
+            #     fields=[]
+            # ), помилка: functions in index expression must be marked IMMUTABLE, хз чого, треба розібратись
         ]
 
     def __str__(self):

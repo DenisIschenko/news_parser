@@ -1,10 +1,6 @@
 import React, {useEffect, useState} from 'react'
-import {
-    Box,
-    CircularProgress,
-    Pagination,
-    Typography,
-} from '@mui/material'
+import {Box, CircularProgress, IconButton, Pagination, TextField, Typography,} from '@mui/material'
+import ClearIcon from '@mui/icons-material/Clear'
 import axios from 'axios'
 import NewsCard from '../components/NewsCard'
 import CategorySelect from '../components/CategorySelect'
@@ -19,7 +15,9 @@ function FeedList() {
     const [loading, setLoading] = useState(false)
     const [selectedNews, setSelectedNews] = useState(null)
     const [openModal, setOpenModal] = useState(false)
+    const [searchQuery, setSearchQuery] = useState('')
     const PAGE_SIZE = 20
+
 
     const fetchFeeds = async (url = 'http://localhost:8000/api/news/') => {
         try {
@@ -62,6 +60,13 @@ function FeedList() {
 
     const handlePageChange = (_, page) => {
         setCurrentPage(page)
+
+        if (searchQuery && searchQuery.trim()) {
+            const url = `http://localhost:8000/api/news/search/?q=${searchQuery}&page=${page}`
+            console.log('handlePageChange with search', url)
+            fetchFeeds(url)
+            return
+        }
         const base = selectedCategory
             ? `http://localhost:8000/api/news/category/${selectedCategory}/?page=${page}`
             : `http://localhost:8000/api/news/?page=${page}`
@@ -78,6 +83,17 @@ function FeedList() {
         setSelectedNews(null)
         setOpenModal(false)
     }
+    const handleSearch = async () => {
+        setCurrentPage(1)
+        if (!searchQuery.trim()) {
+            fetchFeeds()
+            return
+        }
+
+        const url = `http://localhost:8000/api/news/search/?q=${searchQuery}`;
+        console.log('handleSearch', url)
+        fetchFeeds(url);
+    }
 
     return (
         <Box sx={{padding: 4}}>
@@ -85,19 +101,44 @@ function FeedList() {
                 Новини
             </Typography>
 
-            <CategorySelect
-                categories={categories}
-                selectedCategory={selectedCategory}
-                onChange={handleCategoryChange}
+            <TextField
+                label="Пошук"
+                variant="outlined"
+                fullWidth
+                sx={{mb: 3}}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSearch()
+                }}
+                FilledInput={{
+                    endAdornment: searchQuery && (
+                        <IconButton onClick={() => {
+                            setSearchQuery('');
+                            fetchFeeds();
+                        }}>
+                            <ClearIcon/>
+                        </IconButton>
+                    ),
+                }}
             />
 
+            {!searchQuery && (
+                <CategorySelect
+                    categories={categories}
+                    selectedCategory={selectedCategory}
+                    onChange={handleCategoryChange}
+                />
+            )}
+
             {loading ? (
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <br />
+                <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+                    <br/>
                     <CircularProgress/>
                 </Box>
             ) : (
                 <>
+
                     {feeds.map((feed) => (
                         <NewsCard
                             key={feed.id}
@@ -107,16 +148,22 @@ function FeedList() {
                             onClick={() => handleOpenModal(feed)} // додаємо onClick для відкриття
                         />
                     ))}
-                    <NewsModal open={openModal} onClose={handleCloseModal} news={selectedNews} />
+                    <NewsModal open={openModal} onClose={handleCloseModal} news={selectedNews}/>
 
-                    <Box sx={{mt: 4, display: 'flex', justifyContent: 'center'}}>
-                        <Pagination
-                            count={Math.ceil(count / PAGE_SIZE)}
-                            page={currentPage}
-                            onChange={handlePageChange}
-                            color="primary"
-                        />
-                    </Box>
+                    {feeds.length === 0 ? (
+                        <Typography variant="body1" color="text.secondary" sx={{mt: 2}}>
+                            За вашим запитом нічого не знайдено.
+                        </Typography>
+                    ) : (
+                        <Box sx={{mt: 4, display: 'flex', justifyContent: 'center'}}>
+                            <Pagination
+                                count={Math.ceil(count / PAGE_SIZE)}
+                                page={currentPage}
+                                onChange={handlePageChange}
+                                color="primary"
+                            />
+                        </Box>
+                    )}
                 </>
             )}
         </Box>
