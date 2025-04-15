@@ -12,12 +12,14 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RunSQL(
             sql="""
-                CREATE INDEX news_search_idx
+                CREATE INDEX news_search_gin
                 ON news_newsarticle
-                USING GIN (
-                    to_tsvector('english', coalesce(title, '') || ' ' || coalesce(content, ''))
-                );
+                USING GIN ((
+                  setweight(to_tsvector('simple'::regconfig, coalesce("news_newsarticle"."title", '')), 'A') ||
+                  setweight(to_tsvector('simple', coalesce("news_newsarticle"."content", '')), 'B')
+                ));
+                
             """,
-            reverse_sql="DROP INDEX news_search_idx;"
+            reverse_sql="DROP INDEX news_search_gin;"
         )
     ]

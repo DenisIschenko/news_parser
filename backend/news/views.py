@@ -1,6 +1,6 @@
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 from django.core.cache import cache
-from django.db.models import Count
+from django.db.models import Count, F
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import generics
 from rest_framework.response import Response
@@ -85,10 +85,15 @@ class NewsSearchView(generics.ListAPIView):
         queryset = NewsArticle.objects.all()
 
         if query:
-            vector = SearchVector('title', weight='A') + SearchVector('content', weight='B')
-            search_query = SearchQuery(query)
+            search_query = SearchQuery(query, config='simple')
+
             queryset = queryset.annotate(
-                rank=SearchRank(vector, search_query)
-            ).filter(rank__gte=0.1).order_by('-rank')
+                vector=SearchVector('title', weight='A', config='simple') +
+                       SearchVector('content', weight='B', config='simple')
+            ).annotate(
+                rank=SearchRank(F('vector'), search_query)
+            ).filter(
+                vector=search_query  # тепер Django знає, що це — анотоване поле
+            ).order_by('-rank')
 
         return queryset
