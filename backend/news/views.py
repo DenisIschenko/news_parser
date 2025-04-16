@@ -10,7 +10,7 @@ from .serializers import NewsArticleSerializer, CategorySerializer
 
 
 class NewsArticleListView(generics.ListAPIView):
-    queryset = NewsArticle.objects.all().order_by('-created_at')
+    queryset = NewsArticle.objects.all().select_related('category').order_by('-created_at')
     serializer_class = NewsArticleSerializer
 
     def list(self, request, *args, **kwargs):
@@ -36,7 +36,7 @@ class NewsArticleListView(generics.ListAPIView):
 
 
 class NewsArticleDetailView(generics.RetrieveAPIView):
-    queryset = NewsArticle.objects.all()
+    queryset = NewsArticle.objects.all().select_related('category')
     serializer_class = NewsArticleSerializer
 
 
@@ -82,7 +82,7 @@ class NewsSearchView(generics.ListAPIView):
 
     def get_queryset(self):
         query = self.request.query_params.get('q')
-        queryset = NewsArticle.objects.all()
+        queryset = NewsArticle.objects.all().select_related('category')
 
         if query:
             search_query = SearchQuery(query, config='simple')
