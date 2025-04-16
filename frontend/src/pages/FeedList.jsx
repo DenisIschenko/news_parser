@@ -111,15 +111,17 @@ function FeedList() {
                 onKeyDown={(e) => {
                     if (e.key === 'Enter') handleSearch()
                 }}
-                FilledInput={{
-                    endAdornment: searchQuery && (
-                        <IconButton onClick={() => {
-                            setSearchQuery('');
-                            fetchFeeds();
-                        }}>
-                            <ClearIcon/>
-                        </IconButton>
-                    ),
+                slotProps={{
+                    input: {
+                        endAdornment: searchQuery && (
+                            <IconButton onClick={() => {
+                                setSearchQuery('');
+                                fetchFeeds();
+                            }}>
+                                <ClearIcon/>
+                            </IconButton>
+                        ),
+                    }
                 }}
             />
 
@@ -145,6 +147,7 @@ function FeedList() {
                             title={feed.title}
                             published_at={feed.published_at}
                             created_at={feed.created_at}
+                            category={feed.category}
                             onClick={() => handleOpenModal(feed)} // додаємо onClick для відкриття
                         />
                     ))}

@@ -1,11 +1,12 @@
 import React from 'react'
 import { Card, CardContent, Typography } from '@mui/material'
 
-function NewsCard({ title, published_at, created_at, onClick }) {
+function NewsCard({ title, published_at, created_at, category, onClick }) {
     return (
         <Card sx={{ mb: 2 }} onClick={onClick}>
             <CardContent>
                 <Typography variant="h6">{title}</Typography>
+                <Typography variant="subtitle2" color="text.secondary">{category}</Typography>
                 <Typography variant="body2" color="text.secondary">
                     {new Date(published_at).toLocaleDateString('uk-UA', {
                         year: 'numeric',
